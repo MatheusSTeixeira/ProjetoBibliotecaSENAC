@@ -1,7 +1,15 @@
-@model ICollection<Emprestimo>
+@model ICollection<Emprestimo>    
 @{
     ViewData["Title"] = "Listagem de Empréstimos";
     string Classe = "";
+    int FiltroPorPag = Int32.Parse(ViewData["livroPorPagina"].ToString());
+    int PaginaAtual =  Int32.Parse(ViewData["PaginaAtual"].ToString());
+    int NumLivrosPorPag = (Model.Count<FiltroPorPag ? Model.Count : FiltroPorPag);
+
+    int NumTotalDePag = 0;
+    @if(NumLivrosPorPag > 0){
+     NumTotalDePag = Model.Count/NumLivrosPorPag + (Model.Count%NumLivrosPorPag==0 ? 0 : 1);
+    }
 }
 
 <div class="row">
@@ -16,7 +24,22 @@
         <div class="form-group mb-2 mx-sm-3">
             <input type="text" placeholder="Filtro" name="Filtro" class="form-control" />
         </div>
+        <div>
+            <select name="itensPorPagina" id="itensPorPagina">
+                <option value="10">10 livros</option>
+                <option value="15">15 livros</option>
+                <option value="30">30 livros</option>
+                <option value="50">50 livros</option>
+                <option value=@Model.Count>Todos</option>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary mb-2">Pesquisar</button>
+        <div id="SeletorPaginas">
+            <span>Página:</span>
+            @for(int i=1; i<=NumTotalDePag;i++)
+            {
+                <span><a href="/Livro/Listagem?PaginaAtual=@i">@i, </a></span>
+            }
     </form>
     </div>
 </div>
@@ -36,7 +59,9 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach(Emprestimo e in Model)
+                @for(int i = (PaginaAtual-1)*NumLivrosPorPag; i<(NumLivrosPorPag*PaginaAtual<Model.Count?NumLivrosPorPag*PaginaAtual:Model.Count); i++)
+                {
+                @foreach (Emprestimo e in Model)
                 {
                     if((System.DateTime.Compare(System.DateTime.Now, e.DataDevolucao)>0)){
                         Classe = "text-danger";
@@ -53,6 +78,7 @@
                     <td>@e.Livro.Autor</td>
                     <td><a href="/Emprestimo/Edicao/@e.Id">Editar</a></td>
                 </tr>
+                }
                 }
             </tbody>
         </table>
